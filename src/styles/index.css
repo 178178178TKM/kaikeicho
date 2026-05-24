@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-paper: #f5f1e8;
+  --ink: #1a1a1a;
+  --accent: #4a6741;
+  --vermillion: #b85450;
+  --border: #d4c9b3;
+  --muted: #8a8a85;
+}
+
+.font-mincho { font-family: 'Shippori Mincho B1', 'Noto Serif JP', serif; }
+.font-sans-jp { font-family: 'Noto Sans JP', system-ui, sans-serif; }
+.tab-num { font-variant-numeric: tabular-nums; }
+.paper-grain {
+  background-image: radial-gradient(circle at 1px 1px, rgba(74,103,65,0.04) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+.ink-line {
+  background: linear-gradient(to right, transparent, #4a6741 20%, #4a6741 80%, transparent);
+  height: 1px;
+}
+.number-display {
+  font-family: 'Shippori Mincho B1', serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.seal {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px;
+  background: #b85450; color: #f5f1e8;
+  font-family: 'Shippori Mincho B1', serif;
+  font-weight: 700; font-size: 14px;
+  border-radius: 2px;
+  transform: rotate(-3deg);
+}
+.recharts-default-tooltip {
+  background: #f5f1e8 !important;
+  border: 1px solid #4a6741 !important;
+  font-family: 'Noto Sans JP', sans-serif !important;
+}
+input, select, textarea, button { font-family: inherit; }
