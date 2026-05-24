@@ -1,5 +1,6 @@
 // src/components/InputForm.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Camera, X } from 'lucide-react';
 import { todayStr } from '../lib/format.js';
 
 export default function InputForm({ settings, onAdd }) {
@@ -11,8 +12,24 @@ export default function InputForm({ settings, onAdd }) {
     amount: '',
     memo: '',
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   const set = (patch) => setForm(f => ({ ...f, ...patch }));
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   // カテゴリが削除されて form.category が無効になったとき先頭に戻す
   useEffect(() => {
@@ -30,8 +47,10 @@ export default function InputForm({ settings, onAdd }) {
       category: form.category,
       amount: amt,
       memo: form.memo.trim().slice(0, 100),
+      imageFile: imageFile ?? undefined,
     });
     set({ amount: '', memo: '' });
+    clearImage();
   };
 
   return (
@@ -100,6 +119,31 @@ export default function InputForm({ settings, onAdd }) {
         <input type="text" value={form.memo} placeholder="例: スーパー、外食、薬局"
           onChange={e => set({ memo: e.target.value })}
           className="w-full px-3 py-2 bg-transparent border-b border-stone-400 focus:border-stone-700 outline-none text-sm" />
+      </div>
+
+      {/* 画像添付 */}
+      <div>
+        <label className="block text-xs font-mincho text-stone-600 mb-1 tracking-wider">
+          レシート <span className="text-stone-400">(任意)</span>
+        </label>
+        <input ref={fileInputRef} type="file" accept="image/*" capture="environment"
+          onChange={handleImageChange} className="hidden" />
+        {imagePreview ? (
+          <div className="relative inline-block">
+            <img src={imagePreview} alt="プレビュー"
+              className="h-24 w-24 object-cover border border-stone-300" />
+            <button onClick={clearImage} aria-label="画像を削除"
+              className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-stone-100"
+              style={{ background: '#b85450' }}>
+              <X size={12} />
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2 border border-dashed border-stone-400 text-sm font-mincho text-stone-500 hover:border-stone-600 transition">
+            <Camera size={14} /> 写真を追加
+          </button>
+        )}
       </div>
 
       <button onClick={handleAdd} disabled={!form.amount}
