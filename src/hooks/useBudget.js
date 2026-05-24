@@ -46,7 +46,10 @@ export function useBudget(roomId) {
       }
     );
 
-    return unsub;
+    return () => {
+      unsub();
+      clearTimeout(debounceRef.current);
+    };
   }, [roomId]);
 
   async function write(patch) {
@@ -60,14 +63,28 @@ export function useBudget(roomId) {
       ...expense,
     };
     const next = [...budget.expenses, entry];
+    const prev = budget.expenses;
     setBudget(b => ({ ...b, expenses: next }));
-    await write({ expenses: next });
+    try {
+      await write({ expenses: next });
+    } catch (err) {
+      console.error('addExpense failed:', err);
+      setBudget(b => ({ ...b, expenses: prev }));
+      setError(err);
+    }
   }
 
   async function deleteExpense(id) {
     const next = budget.expenses.filter(e => e.id !== id);
+    const prev = budget.expenses;
     setBudget(b => ({ ...b, expenses: next }));
-    await write({ expenses: next });
+    try {
+      await write({ expenses: next });
+    } catch (err) {
+      console.error('deleteExpense failed:', err);
+      setBudget(b => ({ ...b, expenses: prev }));
+      setError(err);
+    }
   }
 
   function updateSettings(patch) {
@@ -78,8 +95,15 @@ export function useBudget(roomId) {
   }
 
   async function clearExpenses() {
+    const prev = budget.expenses;
     setBudget(b => ({ ...b, expenses: [] }));
-    await write({ expenses: [] });
+    try {
+      await write({ expenses: [] });
+    } catch (err) {
+      console.error('clearExpenses failed:', err);
+      setBudget(b => ({ ...b, expenses: prev }));
+      setError(err);
+    }
   }
 
   return { budget, loading, error, addExpense, deleteExpense, updateSettings, clearExpenses };
