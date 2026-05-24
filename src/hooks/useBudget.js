@@ -1,7 +1,8 @@
 // src/hooks/useBudget.js
 import { useState, useEffect, useRef } from 'react';
 import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase.js';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebase.js';
 import { DEFAULT_SETTINGS } from '../lib/constants.js';
 
 const DEBOUNCE_MS = 500;
@@ -57,11 +58,34 @@ export function useBudget(roomId) {
     await setDoc(roomRef(roomId), { ...patch, updatedAt: serverTimestamp() }, { merge: true });
   }
 
-  async function addExpense(expense) {
+  async function compressImage(file, maxPx = 1280, quality = 0.7) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(resolve, 'image/jpeg', quality);
+      };
+      img.src = url;
+    });
+  }
+
+  async function addExpense({ imageFile, ...expenseData }) {
     const entry = {
       id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
-      ...expense,
+      ...expenseData,
     };
+    if (imageFile) {
+      const compressed = await compressImage(imageFile);
+      const storageRef = ref(storage, `rooms/${roomId}/${entry.id}`);
+      await uploadBytes(storageRef, compressed);
+      entry.imageUrl = await getDownloadURL(storageRef);
+    }
     const next = [...budget.expenses, entry];
     const prev = budget.expenses;
     setBudget(b => ({ ...b, expenses: next }));
